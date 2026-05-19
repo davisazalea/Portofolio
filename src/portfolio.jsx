@@ -1,0 +1,711 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import ImageTrail from "./components/ImageTrail";
+import alhidayahImg from "./assets/alhidayah.png";
+import nebulaImg from "./assets/Nebula.png";
+import imunicilImg from "./assets/imunicil.png";
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const NAV_LINKS = ["HOME", "ABOUT ME", "SKILLS", "PROJECTS", "CONTACT"];
+
+const SKILLS = [
+  { name: "Figma", category: "Design", icon: "https://cdn.simpleicons.org/figma/FFFFFF" },
+  { name: "React", category: "Frontend", icon: "https://cdn.simpleicons.org/react/FFFFFF" },
+  { name: "JavaScript", category: "Frontend", icon: "https://cdn.simpleicons.org/javascript/FFFFFF" },
+  { name: "Python", category: "Backend", icon: "https://cdn.simpleicons.org/python/FFFFFF" },
+  { name: "MySQL", category: "Database", icon: "https://cdn.simpleicons.org/mysql/FFFFFF" },
+  { name: "Node.js", category: "Backend", icon: "https://cdn.simpleicons.org/nodedotjs/FFFFFF" },
+  { name: "Tailwind CSS", category: "Frontend", icon: "https://cdn.simpleicons.org/tailwindcss/FFFFFF" },
+  { name: "Git", category: "Tools", icon: "https://cdn.simpleicons.org/git/FFFFFF" }
+];
+
+const PROJECTS = [
+  { id: 1, title: "DPD AL-HIDAYAH JEMBER", category: "Website", img: alhidayahImg, color: "#557B83" },
+  { id: 2, title: "NEBULA HEALTH", category: "Website", img: nebulaImg, color: "#1E1E1E" },
+  { id: 3, title: "IMUNIcil", category: "Apps Design", img: imunicilImg, color: "#334650" },
+];
+
+const EXPERIENCES = [
+  { year: "May 2025 - Aug 2025", company: "CV Sandriano Engineering", role: "Tender Administrator", desc: `• Monitored and identified building project tender opportunities daily via LPSE and other e-procurement platforms.
+• Maintained a digital database of company documents and certificates to speed up tender proposal preparation.
+• Uploaded and submitted construction tender documents accurately and on time through e-procurement systems.` },
+  { year: "Feb 2024 - Jun 2024", company: "PT Orbit Ventura Indonesia", role: "Artificial Intelligence for Job", desc: `• Built machine learning models and applied AI algorithms using Python, working on full data processing cycles.
+• Worked on AI simulation projects using structured problem-solving methods for real-world scenarios.
+• Completed a semester-long independent study in AI under the Kampus Merdeka program with a 4.00 GPA.` },
+  { year: "Aug 2023 - Dec 2023", company: "Startup Campus", role: "UI/UX Design", desc: `• Carried out end-to-end product design, from user research to high-fidelity prototypes using Design Thinking.
+• Created wireframes, user flows, and interactive prototypes in Figma based on user insights.
+• Worked in a cross-functional team to test design ideas, improving critical thinking and communication skills.` },
+];
+
+// ─── MAGNETIC BUTTON ─────────────────────────────────────────────────────────
+function MagneticBtn({ children, className, onClick }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 150, damping: 15 });
+  const sy = useSpring(y, { stiffness: 150, damping: 15 });
+
+  const handleMouse = useCallback((e) => {
+    const rect = ref.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    x.set((e.clientX - cx) * 0.35);
+    y.set((e.clientY - cy) * 0.35);
+  }, [x, y]);
+
+  const handleLeave = useCallback(() => { x.set(0); y.set(0); }, [x, y]);
+
+  return (
+    <motion.button
+      ref={ref}
+      style={{ x: sx, y: sy }}
+      onMouseMove={handleMouse}
+      onMouseLeave={handleLeave}
+      onClick={onClick}
+      className={className}
+      data-cursor="hover"
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+// ─── LOADER ──────────────────────────────────────────────────────────────────
+function Loader({ onComplete }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let n = 0;
+    const interval = setInterval(() => {
+      n += Math.floor(Math.random() * 8) + 2;
+      if (n >= 100) { 
+        n = 100; 
+        clearInterval(interval); 
+        setTimeout(onComplete, 600); 
+      }
+      setCount(n);
+    }, 40);
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  return (
+    <motion.div
+      className="loader-container"
+      exit={{ y: "-100%", transition: { duration: 1.2, ease: [0.76, 0, 0.24, 1] } }}
+    >
+      <div className="loader-bottom">
+        <span className="loader-number">{count}</span>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── NAVBAR ──────────────────────────────────────────────────────────────────
+function Navbar({ menuOpen, setMenuOpen }) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <>
+      <motion.nav
+        className={`navbar ${scrolled ? "scrolled" : ""}`}
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="nav-logo" data-cursor="hover">NAFIZ AZALEA</div>
+        <button className="nav-menu-btn" onClick={() => setMenuOpen(true)} data-cursor="hover">
+          <div className="nav-menu-line"></div>
+          <span>MENU</span>
+        </button>
+        <a href="#contact" className="nav-contact-btn" data-cursor="hover">CONTACT</a>
+      </motion.nav>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            className="menu-overlay"
+            initial={{ clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)" }}
+            animate={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)" }}
+            exit={{ clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)" }}
+            transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+          >
+            <div className="menu-header">
+              <div className="nav-logo">NAFIZ AZALEA</div>
+              <button className="nav-menu-btn" onClick={() => setMenuOpen(false)} data-cursor="hover">
+                <div className="nav-menu-line"></div>
+                <span>CLOSE</span>
+              </button>
+              <div className="nav-contact-btn">CONTACT</div>
+            </div>
+            <div className="menu-links-container">
+              {NAV_LINKS.map((link, i) => (
+                <div className="menu-link-wrap" key={link}>
+                  <motion.a 
+                    href={`#${link.toLowerCase().replace(" ", "")}`}
+                    className="menu-link-item"
+                    onClick={() => setMenuOpen(false)}
+                    data-cursor="hover"
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "-100%" }}
+                    transition={{ delay: 0.2 + i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {link}
+                  </motion.a>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// ─── SPLIT TEXT FOR SCROLL REVEAL ────────────────────────────────────────────
+function ScrollRevealText({ text }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 80%", "end 50%"]
+  });
+
+  const words = text.split(/\s+/).filter(Boolean);
+  return (
+    <div ref={ref} className="reveal-text-container">
+      {words.map((word, i) => {
+        const start = i / words.length;
+        const end = start + (1 / words.length);
+        const opacity = useTransform(scrollYProgress, [start, end], [1, 0.2]);
+        return (
+          <span key={i}>
+            <motion.span style={{ opacity }} className="reveal-word">
+              {word}
+            </motion.span>
+            {" "}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── REVEAL (Slide Up) ───────────────────────────────────────────────────────
+function Reveal({ children, delay = 0, y = 40, className }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-8%" });
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// ─── HERO SECTION ────────────────────────────────────────────────────────────
+function HeroSection() {
+  const ref = useRef(null);
+    const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+    const yMarquee = useTransform(scrollYProgress, [0, 1], [-50, 150]);
+   const scaleImage = useTransform(scrollYProgress, [0, 1], [0.8, 1]);
+   const yImage = useTransform(scrollYProgress, [0, 1], [50, 0]);
+   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.5]);
+
+  const text = Array(10).fill("NAFIZ AZALEA — ").join("");
+
+  return (
+    <section 
+      ref={ref} 
+      className="hero-section" 
+      id="home"
+    >
+      <motion.div className="hero-marquee-wrap" style={{ y: yMarquee }}>
+           <motion.div 
+             className="marquee-content"
+             animate={{ x: ["0%", "-50%"] }}
+             transition={{ duration: 250, repeat: Infinity, ease: "linear" }}
+           >
+          <span>{text}{text}</span>
+        </motion.div>
+      </motion.div>
+      
+      <motion.div 
+        className="hero-center" 
+        style={{ opacity, scale: scaleImage, y: yImage }}
+      >
+        <motion.div 
+          className="hero-img-wrap" 
+          style={{ 
+            width: "120vw", 
+            height: "120vh", 
+            zIndex: 0
+          }}
+        >
+          <div className="hero-img-inner">
+            <ImageTrail />
+            <div className="hero-tagline-wrap">
+              <p className="hero-tagline">INFORMATICS GRADUATE BRIDGING AI TECHNOLOGY & HUMAN-CENTRIC DESIGN</p>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+
+    </section>
+  );
+}
+
+// ─── ABOUT SECTION ───────────────────────────────────────────────────────────
+function AboutSection() {
+  return (
+    <section className="about-section" id="aboutme">
+      <div className="container">
+        <Reveal>
+          <span className="section-subtitle about-subtitle">ABOUT</span>
+        </Reveal>
+        <h2 className="about-headline">
+          <ScrollRevealText text="I AM A FRESH GRADUATE IN COMPUTER SCIENCE WITH A STRONG FOUNDATION IN DATA, WEB DEVELOPMENT, AND SYSTEM ANALYSIS, DEDICATED TO OPTIMIZING WORKFLOWS AND BUILDING EFFICIENT TECHNICAL SOLUTIONS." />
+        </h2>
+      </div>
+    </section>
+  );
+}
+
+// ─── SKILLS SECTION ────────────────────────────────────────────────────────
+function SkillsSection() {
+  return (
+    <section className="skills-section" id="skills">
+      <div className="container">
+        <div className="section-header">
+          <Reveal><span className="section-subtitle">SKILLS & SOFTWARE</span></Reveal>
+          <Reveal delay={0.1}><h2 className="section-title">Technologies I have mastered</h2></Reveal>
+        </div>
+        
+        <div className="skills-grid">
+          {SKILLS.map((skill, i) => (
+            <SkillCard key={skill.name} skill={skill} index={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SkillCard({ skill, index }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-5%" });
+
+  return (
+    <motion.div 
+      ref={ref} 
+      initial={{ opacity: 0, y: 80 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: (index % 4) * 0.1 }}
+      className="skill-card"
+    >
+      <div className="skill-icon-wrap">
+        <img src={skill.icon} alt={skill.name} className="skill-icon" />
+      </div>
+      <div className="skill-info-bottom">
+        <h3 className="skill-title">{skill.name}</h3>
+        <span className="skill-category">{skill.category}</span>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── PROJECTS SECTION ────────────────────────────────────────────────────────
+function ProjectsSection() {
+  return (
+    <section className="projects-section" id="projects">
+      <div className="container">
+        <div className="section-header">
+          <Reveal><span className="section-subtitle">CREATIONS</span></Reveal>
+          <Reveal delay={0.1}><h2 className="section-title">A look into my latest projects</h2></Reveal>
+        </div>
+        
+        <div className="projects-list">
+          {PROJECTS.map((project, i) => (
+            <ProjectCard key={project.id} project={project} index={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProjectCard({ project, index }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-5%" });
+
+  return (
+    <motion.div 
+      ref={ref} 
+      initial={{ opacity: 0, y: 80 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+      className="project-card"
+    >
+      <div className="project-image-wrap">
+        <img src={project.img} alt={project.title} className="project-img" />
+        <div className="project-overlay" style={{ background: project.color }} />
+        
+        <div className="project-info-overlay">
+          <div className="project-info-content">
+            <h3 className="project-title">{project.title}</h3>
+            <div className="project-badges">
+              {project.category.split(',').map(cat => (
+                <span key={cat} className="project-badge">{cat.trim()}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── EXPERIENCE SECTION ────────────────────────────────────────────────────────
+function ExperienceSection() {
+  return (
+    <section className="experience-section">
+      <div className="container">
+        <div className="section-header">
+          <Reveal><span className="section-subtitle">EXPERIENCE</span></Reveal>
+          <Reveal delay={0.1}><h2 className="section-title">My Professional Journey</h2></Reveal>
+        </div>
+        
+        <div className="experience-grid">
+          {EXPERIENCES.map((exp, i) => (
+            <ExperienceCard key={i} exp={exp} index={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ExperienceCard({ exp, index }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-5%" });
+
+  return (
+    <motion.div 
+      ref={ref}
+      className="experience-card"
+      initial={{ opacity: 0, y: 50 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="experience-card-top">
+        <div className="experience-year">{exp.year}</div>
+        <div className="experience-company">{exp.company}</div>
+      </div>
+      <div className="experience-card-bottom">
+        <h3 className="experience-role">{exp.role}</h3>
+        <div className="experience-desc">
+          {exp.desc.split('\n').map((line, i) => (
+            <p key={i} style={{ marginBottom: "12px" }}>{line.trim()}</p>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── CTA & FOOTER ────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer className="footer" id="contact">
+      <div className="cta-container">
+        <Reveal><h2 className="cta-title">YOUR VISION?</h2></Reveal>
+        <Reveal delay={0.1}>
+          <MagneticBtn className="cta-btn">BOOK A CALL</MagneticBtn>
+        </Reveal>
+      </div>
+      
+      <div className="footer-info">
+        <Reveal delay={0.2}>
+          <div className="footer-address">
+            <p>Jember, Indonesia</p>
+            <p>Indonesia</p>
+            <a href="mailto:davisazalea2@gmail.com" className="footer-email" data-cursor="hover">davisazalea2@gmail.com</a>
+          </div>
+        </Reveal>
+        <div className="footer-links-grid">
+          <Reveal delay={0.3}>
+            <div className="footer-nav">
+              <a href="#home" data-cursor="hover">HOME</a>
+              <a href="#aboutme">ABOUT</a>
+              <a href="#skills">SKILLS</a>
+              <a href="#projects">PROJECTS</a>
+              <a href="#contact">CONTACT</a>
+            </div>
+          </Reveal>
+          <Reveal delay={0.4}>
+            <div className="footer-socials">
+              <a href="#" data-cursor="hover">Instagram</a>
+              <a href="#" data-cursor="hover">LinkedIn</a>
+              <a href="#" data-cursor="hover">Dribbble</a>
+              <a href="#" data-cursor="hover">Framer</a>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+      
+      <div className="footer-massive-text">
+        <Reveal delay={0.5} y={100}>
+          <h1>NAFIZ AZALEA</h1>
+        </Reveal>
+      </div>
+    </footer>
+  );
+}
+
+// ─── APP ROOT ────────────────────────────────────────────────────────────────
+export default function App() {
+  const [loaded, setLoaded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Initialize Lenis from CDN if available
+    if (window.Lenis) {
+      const lenis = new window.Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        direction: 'vertical',
+        gestureDirection: 'vertical',
+        smooth: true,
+        mouseMultiplier: 1,
+        smoothTouch: false,
+        touchMultiplier: 2,
+      });
+
+      function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
+      
+      return () => {
+        lenis.destroy();
+      };
+    }
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        :root {
+          --bg: #000000;
+          --fg: #FFFFFF;
+          --accent: #FF5C00;
+          --gray: #888888;
+          --border: rgba(255, 255, 255, 0.1);
+          --font-sans: 'Outfit', sans-serif;
+          --font-display: 'Syne', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { scroll-behavior: initial; }
+        html.lenis { height: auto; }
+        .lenis.lenis-smooth { scroll-behavior: auto !important; }
+        .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+        .lenis.lenis-stopped { overflow: hidden; }
+        .lenis.lenis-scrolling iframe { pointer-events: none; }
+
+        body {
+          background-color: var(--bg);
+          color: var(--fg);
+          font-family: var(--font-sans);
+          -webkit-font-smoothing: antialiased;
+          overflow-x: hidden;
+           /* Custom cursor */
+        }
+
+        a { color: inherit; text-decoration: none; }
+        button { background: none; border: none; font: inherit; color: inherit; outline: none; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 5vw; }
+
+        /* LOADER */
+        .loader-container { position: fixed; inset: 0; background-color: var(--accent); z-index: 9000; display: flex; align-items: flex-end; justify-content: flex-end; padding: 40px 5vw; }
+        .loader-bottom { display: flex; justify-content: flex-end; align-items: flex-end; width: 100%; color: #000; }
+        .loader-number { font-family: var(--font-display); font-size: clamp(100px, 25vw, 300px); font-weight: 800; line-height: 0.8; letter-spacing: -10px; margin-right: -10px; }
+
+        /* NAVBAR */
+        .navbar { position: fixed; top: 0; left: 0; right: 0; padding: 40px 5vw; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; z-index: 1000; mix-blend-mode: difference; color: #fff; transition: padding 0.4s; }
+        .navbar.scrolled { padding: 20px 5vw; }
+        .nav-logo { font-family: var(--font-sans); font-size: 14px; font-weight: 600; letter-spacing: 1px; justify-self: start; }
+        .nav-menu-btn { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: transform 0.3s; }
+        .nav-menu-btn:hover { transform: translateY(2px); }
+        .nav-menu-line { width: 50px; height: 1.5px; background: #fff; transition: width 0.3s; }
+        .nav-menu-btn:hover .nav-menu-line { width: 30px; }
+        .nav-contact-btn { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; justify-self: end; }
+
+        /* MENU OVERLAY */
+        .menu-overlay { 
+          position: fixed; top: 0; left: 0; right: 0; height: 65vh;
+          background: rgba(5, 5, 5, 0.85);
+          backdrop-filter: blur(30px);
+          -webkit-backdrop-filter: blur(30px);
+          z-index: 2000; display: flex; flex-direction: column; padding: 40px 5vw; 
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .menu-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; width: 100%; }
+        .menu-links-container { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 20px; }
+        .menu-link-wrap { overflow: hidden; margin-bottom: 12px; }
+        .menu-link-item { display: block; font-family: var(--font-sans); font-size: clamp(24px, 4vw, 48px); font-weight: 400; text-transform: uppercase; line-height: 1.2; color: var(--fg);  transition: color 0.3s; text-align: center; letter-spacing: 1px; }
+        .menu-link-item:hover { color: var(--accent); }
+
+        /* HERO */
+        .hero-section { position: relative; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .hero-marquee-wrap { position: absolute; top: 50%; left: 0; transform: translateY(-50%); width: 100vw; overflow: hidden; pointer-events: none; z-index: 0; opacity: 0.1; }
+        .marquee-content { white-space: nowrap; display: inline-block; }
+        .marquee-content span { font-family: var(--font-display); font-size: clamp(120px, 25vw, 400px); font-weight: 800; line-height: 1; color: var(--fg); display: inline-block; padding-right: 50px; }
+        .hero-center { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+        .hero-img-wrap { cursor: grab; display: flex; align-items: center; justify-content: center; }
+        .hero-img-wrap:active { cursor: grabbing; }
+        .hero-img-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .image-trail-grid { position: relative; display: grid; width: min(clamp(200px, 25vw, 350px), 100%); aspect-ratio: 1/1; border-radius: 20px; }
+        .trail__img { width: 100%; height: 100%; object-fit: cover; position: relative; will-change: transform; grid-area: 1/1/2/2; border-radius: 20px; pointer-events: none; }
+        .hero-tagline-wrap { max-width: 400px; text-align: center; }
+        .hero-tagline { font-family: var(--font-sans); font-size: 14px; letter-spacing: 1.5px; line-height: 1.6; color: var(--fg); }
+        .hero-footer { position: absolute; bottom: 40px; left: 5vw; right: 5vw; display: flex; justify-content: space-between; align-items: flex-end; z-index: 2; width: auto; }
+        .hero-scroll-indicator { width: 50px; height: 50px; border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .scroll-arrow { font-size: 20px; animation: bounce 2s infinite; }
+        .get-template-btn { background: var(--fg); color: var(--bg); font-weight: 600; padding: 16px 32px; border-radius: 100px; font-size: 14px; position: absolute; right: 5vw; bottom: 40px; z-index: 3; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } 60% { transform: translateY(-3px); } }
+
+        /* ABOUT */
+        .about-section { padding: 200px 0 100px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .about-subtitle { color: var(--accent); background: rgba(255, 92, 0, 0.1); padding: 8px 16px; border-radius: 30px; display: inline-block; margin-bottom: 60px; }
+        .about-headline { font-family: var(--font-display); font-size: clamp(20px, 3.5vw, 48px); font-weight: 700; line-height: 1.3; max-width: 1300px; text-transform: uppercase; }
+        .reveal-word { display: inline-block; }
+
+        /* PROJECTS */
+        .projects-section { padding: 100px 0; }
+        .section-header { margin-bottom: 80px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .section-title { font-family: var(--font-display); font-size: clamp(40px, 6vw, 80px); font-weight: 700; max-width: 800px; line-height: 1.1; margin-top: 20px; }
+        .projects-list { display: flex; flex-direction: column; gap: 60px; }
+        .project-card { display: block; width: 100%; border-radius: 30px; overflow: hidden; position: relative; cursor: pointer; transform: translateZ(0); }
+        .project-image-wrap { width: 100%; aspect-ratio: 21/9; position: relative; overflow: hidden; }
+        .project-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        /* Dark gradient from top for text readability */
+        .project-image-wrap::after {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 60%);
+          opacity: 0; transition: opacity 0.6s; pointer-events: none; z-index: 1;
+        }
+        
+        .project-overlay { position: absolute; inset: 0; opacity: 0; mix-blend-mode: color; transition: opacity 0.6s; z-index: 2; pointer-events: none; }
+        
+        /* Text Overlay Position */
+        .project-info-overlay {
+          position: absolute; inset: 0; padding: 50px; display: flex; flex-direction: column; justify-content: flex-start; z-index: 3; pointer-events: none;
+        }
+        .project-info-content {
+          display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; width: 100%;
+          transform: translateY(-30px); opacity: 0; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        /* Hover Effects */
+        .project-card:hover .project-img { transform: scale(1.05); }
+        .project-card:hover .project-image-wrap::after { opacity: 1; }
+        .project-card:hover .project-overlay { opacity: 0.2; }
+        .project-card:hover .project-info-content { transform: translateY(0); opacity: 1; }
+        
+        .project-title { font-family: var(--font-display); font-size: clamp(32px, 4vw, 56px); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: #fff; line-height: 1.1; margin: 0; }
+        .project-badges { display: flex; gap: 12px; flex-wrap: wrap; }
+        .project-badge { font-size: 13px; font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 1.5px; border: 1px solid rgba(255,255,255,0.3); padding: 12px 24px; border-radius: 100px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        
+        /* Always show text on mobile */
+        @media (max-width: 768px) {
+          .project-image-wrap { aspect-ratio: 16/10; }
+          .project-image-wrap::after { opacity: 1; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, transparent 80%); }
+          .project-info-content { transform: translateY(0); opacity: 1; }
+          .project-info-overlay { padding: 30px; }
+        }
+
+        /* SKILLS */
+        .skills-section { padding: 100px 0; }
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; margin-top: 60px; width: 100%; }
+        .skill-card { padding: 50px 30px; border: 1px solid var(--border); border-radius: 20px; background: #050505; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center; }
+        .skill-card:hover { transform: translateY(-10px); border-color: var(--accent); }
+        .skill-icon-wrap { width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+        .skill-icon { width: 100%; height: 100%; object-fit: contain; transition: transform 0.4s; opacity: 0.7; }
+        .skill-card:hover .skill-icon { transform: scale(1.1); opacity: 1; }
+        .skill-info-bottom { display: flex; flex-direction: column; gap: 10px; }
+        .skill-title { font-family: var(--font-display); font-size: 24px; font-weight: 600; color: var(--fg); line-height: 1; }
+        .skill-category { font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+
+        /* EXPERIENCE */
+        .experience-section { padding: 150px 0; }
+        .experience-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 60px; }
+        .experience-card { padding: 40px; border: 1px solid var(--border); border-radius: 20px; background: #0a0a0a; transition: transform 0.4s, background 0.4s, border-color 0.4s; display: flex; flex-direction: column; justify-content: flex-start; min-height: 300px; }
+        .experience-card:hover { transform: translateY(-10px); background: #111; border-color: var(--accent); }
+        .experience-card-top { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px; margin-bottom: 30px; }
+        .experience-year { font-family: var(--font-display); font-size: 16px; color: var(--accent); font-weight: 600; letter-spacing: 1px; }
+        .experience-company { font-size: 14px; color: var(--gray); text-transform: uppercase; letter-spacing: 1.5px; }
+        .experience-role { font-family: var(--font-display); font-size: 28px; font-weight: 700; margin-bottom: 20px; min-height: 70px; }
+        .experience-desc { color: var(--gray); font-size: 15px; line-height: 1.7; }
+        .experience-desc p:last-child { margin-bottom: 0 !important; }
+
+        /* CTA & FOOTER */
+        .footer { padding: 100px 2vw 0; background: var(--bg); display: flex; flex-direction: column; }
+        .cta-container { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 40px; margin-bottom: 100px; }
+        .cta-title { font-family: var(--font-display); font-size: clamp(60px, 12vw, 150px); font-weight: 800; line-height: 1; color: var(--fg); }
+        .cta-btn { background: var(--accent); color: var(--bg); font-family: var(--font-sans); font-size: 18px; font-weight: 600; padding: 20px 40px; border-radius: 100px; transition: transform 0.3s, background 0.3s; }
+        .cta-btn:hover { transform: scale(1.05); background: #fff; }
+        
+        .footer-info { display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 60px; padding-bottom: 60px; flex-wrap: wrap; gap: 40px; }
+        .footer-address { color: var(--gray); font-size: 16px; line-height: 1.6; }
+        .footer-email { color: var(--fg); font-weight: 600; font-size: 20px; display: block; margin-top: 20px; text-decoration: underline; }
+        .footer-links-grid { display: flex; gap: 80px; }
+        .footer-nav, .footer-socials { display: flex; flex-direction: column; gap: 16px; font-size: 16px; font-weight: 500; }
+        .footer-nav a:hover, .footer-socials a:hover { color: var(--accent); }
+
+        .footer-massive-text { text-align: center; width: 100%; margin-top: auto; }
+        .footer-massive-text h1 { font-family: var(--font-display); font-size: clamp(32px, 8vw, 120px); font-weight: 800; color: var(--accent); line-height: 1; white-space: nowrap; letter-spacing: -0.05em; }
+
+        @media (max-width: 768px) {
+          .footer-info { flex-direction: column; gap: 40px; }
+          .footer-links-grid { flex-direction: column; gap: 40px; }
+          .get-template-btn { position: relative; right: auto; bottom: auto; margin-top: 20px; }
+          .loader-number { font-size: 120px; }
+          .cursor-wrap { display: none; }
+        }
+      `}</style>
+
+      <AnimatePresence>
+        {!loaded && <Loader key="loader" onComplete={() => setLoaded(true)} />}
+      </AnimatePresence>
+
+      {loaded && (
+        <>
+          <Navbar menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
+          <main>
+            <HeroSection />
+            <AboutSection />
+            <SkillsSection />
+            <ProjectsSection />
+            <ExperienceSection />
+          </main>
+          <Footer />
+        </>
+      )}
+    </>
+  );
+}
