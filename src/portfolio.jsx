@@ -424,6 +424,46 @@ function ExperienceCard({ exp, index }) {
   );
 }
 
+// ─── ACHIEVEMENTS SECTION ──────────────────────────────────────────────────────
+function AchievementsSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-5%" });
+
+  return (
+    <section className="achievements-section">
+      <div className="container">
+        <div className="section-header">
+          <Reveal><span className="section-subtitle">ACHIEVEMENTS</span></Reveal>
+          <Reveal delay={0.1}><h2 className="section-title">Community Impact</h2></Reveal>
+        </div>
+
+        <motion.div
+          ref={ref}
+          className="achievement-card"
+          initial={{ opacity: 0, y: 50 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="achievement-card-top">
+            <div className="achievement-badge">ACHIEVEMENT</div>
+            <div className="achievement-year">Apr 2024 – Nov 2024</div>
+          </div>
+          <h3 className="achievement-title">PROMAHADESA</h3>
+          <p className="achievement-subtitle">Program Mahasiswa Berdesa</p>
+          <p className="achievement-association">Associated with University of Jember</p>
+          <div className="achievement-divider"></div>
+          <p className="achievement-desc">
+            PROMAHADESA is a program launched by the University of Jember to advance sustainable community development. Our team chose to center its activities in Darsono Village, Arjasa District, Jember Regency, as this village is a key area supporting the local tofu production industry.
+          </p>
+          <p className="achievement-desc">
+            The tofu industry in Darsono Village generates both solid (tofu dregs/pulp) and liquid waste. Although the dregs retain high protein content due to traditional grinding methods, this potential remains sub-optimally utilized. The majority of the tofu dregs are only used as animal feed, with the remainder often left unprocessed, posing a risk of environmental pollution. Furthermore, the local community, particularly the PKK Women's Group, lacks adequate understanding of the benefits and market value of tofu dregs when processed into valuable products. Therefore, the PROMAHADESA program was designed as a solution to address this waste utilization problem and empower the community through training in producing functional snacks that are rich in protein and antioxidants.
+          </p>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
 // ─── CTA & FOOTER ────────────────────────────────────────────────────────────
 function Footer() {
   return (
@@ -663,6 +703,19 @@ export default function App() {
         .experience-desc { color: var(--gray); font-size: 15px; line-height: 1.7; }
         .experience-desc p:last-child { margin-bottom: 0 !important; }
 
+        /* ACHIEVEMENTS */
+        .achievements-section { padding: 100px 0; }
+        .achievement-card { padding: 40px; border: 1px solid var(--border); border-radius: 20px; background: #0a0a0a; display: flex; flex-direction: column; gap: 16px; transition: transform 0.4s, border-color 0.4s; }
+        .achievement-card:hover { transform: translateY(-10px); border-color: var(--accent); }
+        .achievement-card-top { display: flex; justify-content: space-between; align-items: center; }
+        .achievement-badge { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; border: 1px solid var(--accent); padding: 8px 16px; border-radius: 100px; background: rgba(255, 92, 0, 0.1); }
+        .achievement-year { font-size: 14px; color: var(--gray); }
+        .achievement-title { font-family: var(--font-display); font-size: 32px; font-weight: 800; color: var(--fg); }
+        .achievement-subtitle { font-size: 18px; color: var(--gray); }
+        .achievement-association { font-size: 14px; color: var(--gray); }
+        .achievement-divider { height: 1px; background: var(--border); margin: 8px 0; }
+        .achievement-desc { color: var(--gray); font-size: 15px; line-height: 1.7; }
+
         /* CTA & FOOTER */
         .footer { padding: 100px 2vw 0; background: var(--bg); display: flex; flex-direction: column; }
         .cta-container { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 40px; margin-bottom: 100px; }
@@ -702,6 +755,7 @@ export default function App() {
             <SkillsSection />
             <ProjectsSection />
             <ExperienceSection />
+            <AchievementsSection />
           </main>
           <Footer />
         </>
