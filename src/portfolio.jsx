@@ -458,8 +458,65 @@ function AchievementsSection() {
           <p className="achievement-desc">
             The tofu industry in Darsono Village generates both solid (tofu dregs/pulp) and liquid waste. Although the dregs retain high protein content due to traditional grinding methods, this potential remains sub-optimally utilized. The majority of the tofu dregs are only used as animal feed, with the remainder often left unprocessed, posing a risk of environmental pollution. Furthermore, the local community, particularly the PKK Women's Group, lacks adequate understanding of the benefits and market value of tofu dregs when processed into valuable products. Therefore, the PROMAHADESA program was designed as a solution to address this waste utilization problem and empower the community through training in producing functional snacks that are rich in protein and antioxidants.
           </p>
+          <div className="achievement-gallery">
+            <img src="/images/promaha1.jpg" alt="PROMAHADESA 1" className="achievement-img" />
+            <img src="/images/promaha2.jpg" alt="PROMAHADESA 2" className="achievement-img" />
+            <img src="/images/promaha3.jpg" alt="PROMAHADESA 3" className="achievement-img" />
+          </div>
         </motion.div>
       </div>
+    </section>
+  );
+}
+
+// ─── CERTIFICATES SECTION ──────────────────────────────────────────────────────
+function CertificatesSection() {
+  const [selectedImg, setSelectedImg] = useState(null);
+  const certs = Array.from({ length: 8 }, (_, i) => `/images/${i + 1}.png`);
+
+  return (
+    <section className="certificates-section">
+      <div className="container">
+        <div className="section-header">
+          <Reveal><span className="section-subtitle">CERTIFICATES</span></Reveal>
+          <Reveal delay={0.1}><h2 className="section-title">My Certifications</h2></Reveal>
+        </div>
+
+        <div className="certs-grid">
+          {certs.map((src, i) => (
+            <Reveal key={i} delay={0.1 + i * 0.05}>
+              <div className="cert-card" onClick={() => setSelectedImg(src)} data-cursor="zoom-in">
+                <img src={src} alt={`Certificate ${i + 1}`} className="cert-img" />
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {selectedImg && (
+          <motion.div
+            className="cert-lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setSelectedImg(null)}
+          >
+            <motion.img
+              src={selectedImg}
+              alt="Certificate"
+              className="cert-lightbox-img"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button className="cert-lightbox-close" onClick={() => setSelectedImg(null)}>✕</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
@@ -692,7 +749,7 @@ export default function App() {
         .skill-category { font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
 
         /* EXPERIENCE */
-        .experience-section { padding: 150px 0; }
+        .experience-section { padding: 100px 0; }
         .experience-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 60px; }
         .experience-card { padding: 40px; border: 1px solid var(--border); border-radius: 20px; background: #0a0a0a; transition: transform 0.4s, background 0.4s, border-color 0.4s; display: flex; flex-direction: column; justify-content: flex-start; min-height: 300px; }
         .experience-card:hover { transform: translateY(-10px); background: #111; border-color: var(--accent); }
@@ -715,6 +772,20 @@ export default function App() {
         .achievement-association { font-size: 14px; color: var(--gray); }
         .achievement-divider { height: 1px; background: var(--border); margin: 8px 0; }
         .achievement-desc { color: var(--gray); font-size: 15px; line-height: 1.7; }
+        .achievement-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+        .achievement-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 16px; }
+
+        /* CERTIFICATES */
+        .certificates-section { padding: 100px 0; }
+        .certs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 60px; }
+        .cert-card { border-radius: 16px; overflow: hidden; cursor: pointer; border: 1px solid var(--border); transition: transform 0.4s, border-color 0.4s; }
+        .cert-card:hover { transform: translateY(-8px); border-color: var(--accent); }
+        .cert-img { width: 100%; object-fit: contain; display: block; transition: transform 0.4s; }
+        .cert-card:hover .cert-img { transform: scale(1.05); }
+        .cert-lightbox { position: fixed; inset: 0; z-index: 5000; background: rgba(0, 0, 0, 0.9); display: flex; align-items: center; justify-content: center; padding: 40px; cursor: pointer; }
+        .cert-lightbox-img { max-width: 90%; max-height: 90vh; border-radius: 12px; cursor: default; }
+        .cert-lightbox-close { position: absolute; top: 20px; right: 30px; font-size: 24px; color: #fff; background: none; border: none; cursor: pointer; padding: 10px; }
+        .cert-lightbox-close:hover { color: var(--accent); }
 
         /* CTA & FOOTER */
         .footer { padding: 100px 2vw 0; background: var(--bg); display: flex; flex-direction: column; }
@@ -739,6 +810,8 @@ export default function App() {
           .get-template-btn { position: relative; right: auto; bottom: auto; margin-top: 20px; }
           .loader-number { font-size: 120px; }
           .cursor-wrap { display: none; }
+          .certs-grid { grid-template-columns: repeat(2, 1fr); }
+          .achievement-gallery { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -756,6 +829,7 @@ export default function App() {
             <ProjectsSection />
             <ExperienceSection />
             <AchievementsSection />
+            <CertificatesSection />
           </main>
           <Footer />
         </>
